@@ -28,8 +28,10 @@ body {
     padding:10px;
     margin:5px 0;
     cursor:pointer;
+    border-radius: 5px;
 }
 
+.nav-item:hover { background:#555; }
 .nav-item.active { background:#4CAF50; }
 
 /* Content */
@@ -46,22 +48,31 @@ table {
     width:100%;
     border-collapse: collapse;
     background:white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 th, td {
-    padding:10px;
+    padding:12px;
     border:1px solid #ddd;
+    text-align: left;
 }
+
+th { background: #f8f9fa; font-weight: bold; }
 
 /* Button */
 .btn {
-    padding:5px 10px;
+    padding:6px 12px;
     border:none;
     cursor:pointer;
+    border-radius: 4px;
+    font-size: 14px;
 }
 
-.btn-primary { background:blue; color:white; }
-.btn-success { background:green; color:white; }
+.btn-primary { background:#007bff; color:white; }
+.btn-success { background:#28a745; color:white; }
+.btn-danger { background:#dc3545; color:white; }
 
 /* Modal */
 .modal {
@@ -70,13 +81,17 @@ th, td {
     top:0; left:0;
     width:100%; height:100%;
     background:rgba(0,0,0,0.5);
+    z-index: 1000;
 }
 
 .modal-content {
     background:white;
     margin:10% auto;
-    padding:20px;
-    width:400px;
+    padding:25px;
+    width:90%;
+    max-width: 500px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
 }
 </style>
 </head>
@@ -84,28 +99,35 @@ th, td {
 <body>
 
 <div class="sidebar">
-    <div class="nav-item active" onclick="showSection('dashboard', event)">Dashboard</div>
-    <div class="nav-item" onclick="showSection('nasabah', event)">Nasabah</div>
-    <div class="nav-item" onclick="showSection('rekening', event)">Rekening</div>
+    <div class="nav-item active" data-section="dashboard">Dashboard</div>
+    <div class="nav-item" data-section="nasabah">Nasabah</div>
+    <div class="nav-item" data-section="rekening">Rekening</div>
 </div>
 
 <div class="main">
 
     <!-- Dashboard -->
     <div id="dashboard" class="content-section active">
-        <h2>Dashboard</h2>
-        <p>Total Nasabah: <span id="totalNasabah"></span></p>
+        <h2>📊 Dashboard</h2>
+        <div style="background:white; padding:20px; border-radius:10px; margin:20px 0;">
+            <p><strong>Total Nasabah:</strong> <span id="totalNasabah" style="color:#4CAF50; font-size:24px;">0</span></p>
+            <p><strong>Status Pending:</strong> <span id="pendingCount" style="color:#ff9800;">0</span></p>
+            <p><strong>Total Saldo:</strong> <span id="totalSaldo" style="color:#2196F3;">Rp 0</span></p>
+        </div>
     </div>
 
     <!-- Nasabah -->
     <div id="nasabah" class="content-section">
-        <h2>Data Nasabah</h2>
-        <table>
+        <h2>👥 Data Nasabah</h2>
+        <button class="btn btn-success" onclick="loadData()">🔄 Refresh</button>
+        <table style="margin-top:15px;">
             <thead>
                 <tr>
+                    <th>No</th>
                     <th>Nama</th>
                     <th>KTP</th>
                     <th>Status</th>
+                    <th>Saldo</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -115,13 +137,14 @@ th, td {
 
     <!-- Rekening -->
     <div id="rekening" class="content-section">
-        <h2>Data Rekening</h2>
+        <h2>💳 Data Rekening</h2>
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>ID Rekening</th>
                     <th>Nama</th>
                     <th>Saldo</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody id="rekeningTable"></tbody>
@@ -134,91 +157,138 @@ th, td {
 <div id="modal" class="modal">
     <div class="modal-content">
         <h3>Detail Nasabah</h3>
-        <div id="modalBody"></div>
+        <div id="modalBody" style="font-size:16px; line-height:1.6;"></div>
         <br>
-        <button onclick="closeModal()">Tutup</button>
+        <button class="btn btn-primary" onclick="closeModal()">✅ Tutup</button>
     </div>
 </div>
 
 <script>
-
 // DATA
-const nasabahData = [
-    {nama:'Budi', ktp:'123', status:'pending', saldo:500000},
-    {nama:'Siti', ktp:'456', status:'approved', saldo:1000000}
+let nasabahData = [
+    {id:1, nama:'Budi Santoso', ktp:'1234567890123456', status:'pending', saldo:500000, email:'budi@email.com'},
+    {id:2, nama:'Siti Aminah', ktp:'9876543210987654', status:'approved', saldo:1500000, email:'siti@email.com'},
+    {id:3, nama:'Ahmad Fauzi', ktp:'1112223334445556', status:'pending', saldo:750000, email:'ahmad@email.com'}
 ];
 
-// NAVIGATION
-function showSection(section, event) {
-    document.querySelectorAll('.content-section')
-        .forEach(s => s.classList.remove('active'));
+// NAVIGATION - FIXED
+document.addEventListener('DOMContentLoaded', function() {
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const section = this.getAttribute('data-section');
+            showSection(section);
+        });
+    });
+    
+    loadData();
+});
 
-    document.querySelectorAll('.nav-item')
-        .forEach(n => n.classList.remove('active'));
-
+function showSection(section) {
+    // Hide all sections
+    document.querySelectorAll('.content-section').forEach(s => {
+        s.classList.remove('active');
+    });
+    
+    // Remove active from nav
+    document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.remove('active');
+    });
+    
+    // Show selected section
     document.getElementById(section).classList.add('active');
-    event.target.classList.add('active');
+    
+    // Activate nav item
+    document.querySelector(`[data-section="${section}"]`).classList.add('active');
 }
 
-// LOAD DATA
+// LOAD DATA - FIXED
 function loadData() {
+    // Dashboard stats
     document.getElementById('totalNasabah').innerText = nasabahData.length;
-
-    // Nasabah
+    const pending = nasabahData.filter(n => n.status === 'pending').length;
+    document.getElementById('pendingCount').innerText = pending;
+    const totalSaldo = nasabahData.reduce((sum, n) => sum + n.saldo, 0);
+    document.getElementById('totalSaldo').innerText = `Rp ${totalSaldo.toLocaleString()}`;
+    
+    // Nasabah Table - FIXED dengan event delegation
     const nTable = document.getElementById('nasabahTable');
     nTable.innerHTML = '';
-    nasabahData.forEach((n,i)=>{
+    nasabahData.forEach((nasabah, i) => {
+        const statusClass = nasabah.status === 'approved' ? 'btn-success' : 'btn-warning';
+        const statusText = nasabah.status === 'approved' ? '✅ Approved' : '⏳ Pending';
+        
         nTable.innerHTML += `
-        <tr>
-            <td>${n.nama}</td>
-            <td>${n.ktp}</td>
-            <td>${n.status}</td>
-            <td>
-                <button class="btn btn-primary" onclick="showDetail(${i})">Detail</button>
-                ${n.status==='pending' ? `<button class="btn btn-success" onclick="approve(${i})">Approve</button>`:''}
-            </td>
-        </tr>`;
+            <tr>
+                <td>${i+1}</td>
+                <td><strong>${nasabah.nama}</strong></td>
+                <td>${nasabah.ktp}</td>
+                <td>
+                    <span class="btn ${statusClass}" style="padding:4px 8px; font-size:12px;">
+                        ${statusText}
+                    </span>
+                </td>
+                <td>Rp ${nasabah.saldo.toLocaleString()}</td>
+                <td>
+                    <button class="btn btn-primary" onclick="showDetail(${i})">👁️ Detail</button>
+                    ${nasabah.status === 'pending' ? 
+                        `<button class="btn btn-success" onclick="approve(${i})">✅ Approve</button>` : 
+                        `<button class="btn btn-danger" onclick="reject(${i})">❌ Reject</button>`
+                    }
+                </td>
+            </tr>`;
     });
 
-    // Rekening
+    // Rekening Table
     const rTable = document.getElementById('rekeningTable');
     rTable.innerHTML = '';
-    nasabahData.forEach(n=>{
+    nasabahData.forEach(n => {
         rTable.innerHTML += `
-        <tr>
-            <td>REK001</td>
-            <td>${n.nama}</td>
-            <td>${n.saldo}</td>
-        </tr>`;
+            <tr>
+                <td>REK${String(n.id).padStart(3,'0')}</td>
+                <td>${n.nama}</td>
+                <td>Rp ${n.saldo.toLocaleString()}</td>
+                <td>${n.status === 'approved' ? '✅ Aktif' : '⏳ Pending'}</td>
+            </tr>`;
     });
 }
 
-// DETAIL
+// DETAIL MODAL
 function showDetail(i) {
     const n = nasabahData[i];
     document.getElementById('modalBody').innerHTML = `
-        Nama: ${n.nama}<br>
-        KTP: ${n.ktp}<br>
-        Status: ${n.status}<br>
-        Saldo: ${n.saldo}
+        <strong>Nama:</strong> ${n.nama}<br>
+        <strong>KTP:</strong> ${n.ktp}<br>
+        <strong>Email:</strong> ${n.email}<br>
+        <strong>Status:</strong> 
+        <span style="color:${n.status === 'approved' ? '#28a745' : '#ff9800'}; font-weight:bold;">
+            ${n.status === 'approved' ? '✅ Approved' : '⏳ Pending'}
+        </span><br>
+        <strong>Saldo:</strong> Rp ${n.saldo.toLocaleString()}
     `;
-    document.getElementById('modal').style.display='block';
+    document.getElementById('modal').style.display = 'block';
 }
 
 // CLOSE MODAL
 function closeModal() {
-    document.getElementById('modal').style.display='none';
+    document.getElementById('modal').style.display = 'none';
 }
 
 // APPROVE
 function approve(i) {
-    nasabahData[i].status = 'approved';
-    loadData();
+    if(confirm('✅ Approve nasabah ini?')) {
+        nasabahData[i].status = 'approved';
+        loadData();
+    }
 }
 
-// INIT
-loadData();
-
+// REJECT
+function reject(i) {
+    if(confirm('❌ Reject nasabah ini?')) {
+        nasabahData[i].status = 'rejected';
+        loadData();
+    }
+}
 </script>
 
 </body>
