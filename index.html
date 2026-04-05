@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Bank Nasabah</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+      <script src="script.js"></script>
+</head>
+<body>
+    <!-- SIDEBAR - FIXED NO href="#" -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <h2><i class="fas fa-building-columns"></i> BANKU</h2>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <button type="button" class="nav-link active" data-page="dashboard">
+                    <i class="fas fa-gauge-high"></i> Dashboard
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" data-page="nasabah">
+                    <i class="fas fa-users"></i> Data Nasabah 
+                    <span class="badge" id="nasabahCount">0</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" onclick="openModal('add')">
+                    <i class="fas fa-user-plus"></i> Tambah Nasabah
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" data-page="pending">
+                    <i class="fas fa-clock-rotate-left"></i> Pending 
+                    <span class="badge" id="pendingCount">0</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" data-page="laporan">
+                    <i class="fas fa-chart-mixed"></i> Laporan
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" data-page="pengaturan">
+                    <i class="fas fa-gear"></i> Pengaturan
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <button class="mobile-toggle" onclick="toggleSidebar()" type="button">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 id="pageTitle">Dashboard</h1>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Cari nasabah...">
+                <i class="fas fa-magnifying-glass"></i>
+            </div>
+            
+            <div class="user-profile">
+                <span>Admin Utama</span>
+                <div class="avatar">AU</div>
+            </div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="dashboard-grid" id="mainContent">
+            <!-- Content akan di-generate oleh JS -->
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal" id="nasabahModal">
+        <div class="modal-content">
+            <h2 id="modalTitle"><i class="fas fa-user-plus"></i> Tambah Nasabah Baru</h2>
+            <form id="nasabahForm">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Nama Lengkap *</label>
+                    <input type="text" id="nama" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email *</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-phone"></i> No. Telepon *</label>
+                    <input type="tel" id="telepon" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-map-marker-alt"></i> Alamat *</label>
+                    <textarea id="alamat" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Tanggal Lahir *</label>
+                    <input type="date" id="tglLahir" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-id-card"></i> No. KTP *</label>
+                    <input type="text" id="ktp" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-building"></i> Pekerjaan</label>
+                    <input type="text" id="pekerjaan">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-toggle-on"></i> Status Verifikasi *</label>
+                    <select id="status" required>
+                        <option value="pending">Pending</option>
+                        <option value="active">Aktif</option>
+                        <option value="rejected">Ditolak</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Nasabah</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
